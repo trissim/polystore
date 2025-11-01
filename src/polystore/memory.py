@@ -270,7 +270,8 @@ class MemoryBackend(StorageBackend):
             if partial_path not in self._memory_store:
                 self._memory_store[partial_path] = None  # Directory = None value
 
-        return Path(key)
+        # Return path without leading slash for consistency
+        return Path(key.lstrip("/"))
 
 
     def create_symlink(self, source: Union[str, Path], link_name: Union[str, Path], overwrite: bool = False):
@@ -319,20 +320,17 @@ class MemoryBackend(StorageBackend):
         """
         Check if a memory path points to a file.
 
-        Raises:
-            FileNotFoundError: If path does not exist
-            IsADirectoryError: If path is a directory
+        Returns:
+            bool: True if path exists and is a file, False otherwise
         """
         key = self._normalize(path)
 
         if key not in self._memory_store:
-            raise FileNotFoundError(f"Memory path does not exist: {path}")
+            return False
 
         value = self._memory_store[key]
-        if value is None:
-            raise IsADirectoryError(f"Path is a directory: {path}")
-
-        return True
+        # File if value is not None (directories have None value)
+        return value is not None
     
     def is_dir(self, path: Union[str, Path]) -> bool:
         """
@@ -342,22 +340,16 @@ class MemoryBackend(StorageBackend):
             path: Path to check
 
         Returns:
-            bool: True if path is a directory
-
-        Raises:
-            FileNotFoundError: If path does not exist
-            NotADirectoryError: If path is not a directory
+            bool: True if path exists and is a directory, False otherwise
         """
         key = self._normalize(path)
 
         if key not in self._memory_store:
-            raise FileNotFoundError(f"Memory path does not exist: {path}")
+            return False
 
         value = self._memory_store[key]
-        if value is not None:
-            raise NotADirectoryError(f"Path is not a directory: {path}")
-
-        return True
+        # Directory if value is None
+        return value is None
     
     def _resolve_path(self, path: Union[str, Path]) -> Optional[Any]:
         """
