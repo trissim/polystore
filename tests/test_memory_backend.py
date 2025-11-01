@@ -86,8 +86,8 @@ class TestMemoryBackend:
     def test_ensure_directory(self):
         """Test directory creation."""
         path = self.backend.ensure_directory("/new/nested/dir")
-        # Path should be normalized to remove leading slash
-        assert str(path) == "new/nested/dir"
+        # Path should be normalized to forward slashes and preserve leading slash
+        assert str(path) == "/new/nested/dir"
         
         # Verify directory exists
         assert self.backend.exists("/new/nested/dir")

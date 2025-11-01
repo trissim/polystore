@@ -270,8 +270,8 @@ class MemoryBackend(StorageBackend):
             if partial_path not in self._memory_store:
                 self._memory_store[partial_path] = None  # Directory = None value
 
-        # Return path without leading slash for consistency
-        return Path(key.lstrip("/"))
+        # Return path as-is (normalized to forward slashes)
+        return Path(key)
 
 
     def create_symlink(self, source: Union[str, Path], link_name: Union[str, Path], overwrite: bool = False):
