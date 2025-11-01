@@ -77,7 +77,7 @@ To install for development with testing and documentation tools:
 Requirements
 ------------
 
-* **Python**: 3.9 or later
+* **Python**: 3.11 or later
 * **NumPy**: 1.26.0 or later
 * **portalocker**: 2.8.0 or later (for atomic file operations)
 * **metaclass-registry**: From GitHub (automatic backend registration)

@@ -7,7 +7,7 @@ name = "polystore"
 dynamic = ["version"]
 description = "Framework-agnostic multi-backend storage abstraction for ML and scientific computing"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = {text = "MIT License"}
 authors = [
     {name = "Tristan Simas", email = "tristan.simas@mail.mcgill.ca"}
@@ -144,11 +144,11 @@ exclude_lines = [
 
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310", "py311", "py312"]
+target-version = ["py311", "py312"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py311"
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
