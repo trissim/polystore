@@ -41,13 +41,10 @@ classifiers = [
 dependencies = [
     "numpy>=1.26.0",
     "portalocker>=2.8.0",  # Cross-platform file locking
-]
-
-[project.optional-dependencies]
-metaclass-registry = [
     "metaclass-registry @ git+https://github.com/trissim/metaclass-registry.git@main",
 ]
 
+[project.optional-dependencies]
 zarr = [
     "zarr>=2.18.0,<3.0",
     "ome-zarr>=0.11.0",
