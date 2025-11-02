@@ -7,7 +7,12 @@ import numpy as np
 def test_import():
     """Test that polystore can be imported."""
     import polystore
-    assert polystore.__version__ == "0.1.0"
+    # Don't assert a fixed version string in tests; CI/releases may bump it.
+    # Instead, ensure a version attribute exists and looks like a semantic
+    # version (e.g., '0.1.2') or at least is a non-empty string.
+    assert hasattr(polystore, "__version__")
+    assert isinstance(polystore.__version__, str)
+    assert polystore.__version__.strip() != ""
 
 
 def test_memory_backend():
