@@ -12,6 +12,7 @@ Polystore provides a pluggable storage backend system with multi-framework I/O s
    installation
    quickstart
    api/index
+   guides/custom_backends
 
 Features
 --------

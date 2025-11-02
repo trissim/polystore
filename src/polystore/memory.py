@@ -1,28 +1,24 @@
-# openhcs/io/storage/backends/memory.py
+# polystore/memory.py
 """
-Memory storage backend module for OpenHCS.
+Memory storage backend module.
 
-This module provides an in-memory implementation of the MicroscopyStorageBackend interface.
-It stores data in memory and supports overlay operations for materializing data to disk when needed.
-
-This implementation enforces Clause 106-A (Declared Memory Types) and
-Clause 251 (Declarative Memory Conversion Interface) by requiring explicit
-memory type declarations and providing declarative conversion methods.
+This module provides an in-memory implementation of the StorageBackend interface.
+It stores data in memory and supports directory operations.
 """
 
 import logging
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional, Set, Union
 
-from openhcs.io.base import StorageBackend
-from openhcs.constants.constants import Backend
+from .base import StorageBackend
+from .exceptions import StorageResolutionError
 
 logger = logging.getLogger(__name__)
 
 
-class MemoryStorageBackend(StorageBackend):
+class MemoryBackend(StorageBackend):
     """Memory storage backend with automatic registration."""
-    _backend_type = Backend.MEMORY.value
+    _backend_type = "memory"
     def __init__(self, shared_dict: Optional[Dict[str, Any]] = None):
         """
         Initializes the memory storage.
@@ -260,7 +256,7 @@ class MemoryStorageBackend(StorageBackend):
         except Exception as e:
             raise StorageResolutionError(f"Failed to recursively delete path: {path}") from e
 
-    def ensure_directory(self, directory: Union[str, Path]) -> Path:
+    def ensure_directory(self, directory: Union[str, Path]) -> PurePosixPath:
         key = self._normalize(directory)
         self._prefixes.add(key if key.endswith("/") else key + "/")
 
@@ -274,7 +270,9 @@ class MemoryStorageBackend(StorageBackend):
             if partial_path not in self._memory_store:
                 self._memory_store[partial_path] = None  # Directory = None value
 
-        return Path(key)
+        # Return a POSIX-style path object so string conversion preserves
+        # forward slashes across platforms (important for Windows CI/tests)
+        return PurePosixPath(key)
 
 
     def create_symlink(self, source: Union[str, Path], link_name: Union[str, Path], overwrite: bool = False):
@@ -319,24 +317,34 @@ class MemoryStorageBackend(StorageBackend):
         key = parts[-1]
         return isinstance(current.get(key), MemorySymlink)
 
+    def exists(self, path: Union[str, Path]) -> bool:
+        """
+        Check if a path exists in memory storage.
+
+        Args:
+            path: Path to check
+
+        Returns:
+            bool: True if path exists (as file or directory), False otherwise
+        """
+        key = self._normalize(path)
+        return key in self._memory_store
+
     def is_file(self, path: Union[str, Path]) -> bool:
         """
         Check if a memory path points to a file.
 
-        Raises:
-            FileNotFoundError: If path does not exist
-            IsADirectoryError: If path is a directory
+        Returns:
+            bool: True if path exists and is a file, False otherwise
         """
         key = self._normalize(path)
 
         if key not in self._memory_store:
-            raise FileNotFoundError(f"Memory path does not exist: {path}")
+            return False
 
         value = self._memory_store[key]
-        if value is None:
-            raise IsADirectoryError(f"Path is a directory: {path}")
-
-        return True
+        # File if value is not None (directories have None value)
+        return value is not None
     
     def is_dir(self, path: Union[str, Path]) -> bool:
         """
@@ -346,22 +354,16 @@ class MemoryStorageBackend(StorageBackend):
             path: Path to check
 
         Returns:
-            bool: True if path is a directory
-
-        Raises:
-            FileNotFoundError: If path does not exist
-            NotADirectoryError: If path is not a directory
+            bool: True if path exists and is a directory, False otherwise
         """
         key = self._normalize(path)
 
         if key not in self._memory_store:
-            raise FileNotFoundError(f"Memory path does not exist: {path}")
+            return False
 
         value = self._memory_store[key]
-        if value is not None:
-            raise NotADirectoryError(f"Path is not a directory: {path}")
-
-        return True
+        # Directory if value is None
+        return value is None
     
     def _resolve_path(self, path: Union[str, Path]) -> Optional[Any]:
         """
