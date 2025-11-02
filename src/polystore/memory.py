@@ -7,7 +7,7 @@ It stores data in memory and supports directory operations.
 """
 
 import logging
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional, Set, Union
 
 from .base import StorageBackend
@@ -256,7 +256,7 @@ class MemoryBackend(StorageBackend):
         except Exception as e:
             raise StorageResolutionError(f"Failed to recursively delete path: {path}") from e
 
-    def ensure_directory(self, directory: Union[str, Path]) -> Path:
+    def ensure_directory(self, directory: Union[str, Path]) -> PurePosixPath:
         key = self._normalize(directory)
         self._prefixes.add(key if key.endswith("/") else key + "/")
 
@@ -270,8 +270,9 @@ class MemoryBackend(StorageBackend):
             if partial_path not in self._memory_store:
                 self._memory_store[partial_path] = None  # Directory = None value
 
-        # Return path as-is (normalized to forward slashes)
-        return Path(key)
+        # Return a POSIX-style path object so string conversion preserves
+        # forward slashes across platforms (important for Windows CI/tests)
+        return PurePosixPath(key)
 
 
     def create_symlink(self, source: Union[str, Path], link_name: Union[str, Path], overwrite: bool = False):
