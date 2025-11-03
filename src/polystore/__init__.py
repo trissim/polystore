@@ -21,9 +21,15 @@ from .memory import MemoryBackend
 from .disk import DiskBackend
 
 # Optional backends
-try:
-    from .zarr import ZarrBackend
-except ImportError:
+import os
+
+# Allow tests or environments to skip importing optional heavy backends
+if os.getenv("POLYSTORE_SKIP_ZARR") != "1":
+    try:
+        from .zarr import ZarrBackend
+    except ImportError:
+        ZarrBackend = None
+else:
     ZarrBackend = None
 
 # File manager
@@ -44,9 +50,12 @@ from .exceptions import (
 )
 
 # Streaming (optional)
-try:
-    from .streaming import StreamingBackend
-except ImportError:
+if os.getenv("POLYSTORE_SKIP_ZARR") != "1":
+    try:
+        from .streaming import StreamingBackend
+    except ImportError:
+        StreamingBackend = None
+else:
     StreamingBackend = None
 
 __all__ = [

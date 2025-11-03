@@ -236,6 +236,8 @@ class FileManager:
         # List image files and apply natural sorting
         from .utils import natural_sort
         files = backend_instance.list_files(str(directory), pattern, extensions, recursive)
+        # Ensure we pass strings to natural_sort (backends may return Path objects)
+        files = [str(f) for f in files]
         return natural_sort(files)
 
 
@@ -272,6 +274,8 @@ class FileManager:
         # List files and apply natural sorting
         from .utils import natural_sort
         files = backend_instance.list_files(str(directory), pattern, extensions, recursive, **kwargs)
+        # Ensure we pass strings to natural_sort (backends may return Path objects)
+        files = [str(f) for f in files]
         return natural_sort(files)
 
 
