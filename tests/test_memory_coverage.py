@@ -222,8 +222,10 @@ class TestMemoryStat:
         assert stat["exists"] is True
 
     def test_stat_on_broken_symlink(self):
-        """Test stat on symlink to non-existent target."""
-        self.backend.create_symlink("/base/nonexistent.txt", "/base/link.txt")
+        """Test stat reflects broken symlink after target removal."""
+        self.backend.save("target", "/base/target.txt")
+        self.backend.create_symlink("/base/target.txt", "/base/link.txt")
+        self.backend.delete("/base/target.txt")
 
         stat = self.backend.stat("/base/link.txt")
 

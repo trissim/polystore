@@ -143,13 +143,15 @@ class TestMemoryBackend:
         """Test file checking."""
         self.backend.save(np.array([1]), "/test/file.npy")
         assert self.backend.is_file("/test/file.npy")
-        assert not self.backend.is_file("/test")
+        with pytest.raises(IsADirectoryError):
+            self.backend.is_file("/test")
 
     def test_is_dir(self):
         """Test directory checking."""
         assert self.backend.is_dir("/test")
         self.backend.save(np.array([1]), "/test/file.npy")
-        assert not self.backend.is_dir("/test/file.npy")
+        with pytest.raises(NotADirectoryError):
+            self.backend.is_dir("/test/file.npy")
 
     def test_delete(self):
         """Test file deletion."""

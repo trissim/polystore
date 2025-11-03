@@ -282,22 +282,23 @@ class MemoryBackend(StorageBackend):
     def create_symlink(self, source: Union[str, Path], link_name: Union[str, Path], overwrite: bool = False):
         src_key = self._normalize(source)
         link_key = self._normalize(link_name)
-        
-        # Don't check if source exists - symlinks can be broken
-        # Just check if the source key is in valid format
-        
+
+        # Mirror disk backend semantics: require the target to exist.
+        if src_key not in self._memory_store:
+            raise FileNotFoundError(f"Symlink source not found: {source}")
+
         # Check destination parent exists
         link_parent = self._normalize(Path(link_key).parent)
         if link_parent != '.' and link_parent not in self._memory_store:
             raise FileNotFoundError(f"Destination parent path does not exist: {link_name}")
-        
+
         # Check if destination already exists
         if link_key in self._memory_store:
             if not overwrite:
                 raise FileExistsError(f"Symlink destination already exists: {link_name}")
             # Remove existing entry if overwrite=True
             del self._memory_store[link_key]
-        
+
         self._memory_store[link_key] = MemorySymlink(target=str(source))
 
     def is_symlink(self, path: Union[str, Path]) -> bool:
