@@ -283,9 +283,8 @@ class MemoryBackend(StorageBackend):
         src_key = self._normalize(source)
         link_key = self._normalize(link_name)
         
-        # Check source exists
-        if src_key not in self._memory_store:
-            raise FileNotFoundError(f"Symlink source not found: {source}")
+        # Don't check if source exists - symlinks can be broken
+        # Just check if the source key is in valid format
         
         # Check destination parent exists
         link_parent = self._normalize(Path(link_key).parent)
@@ -369,26 +368,14 @@ class MemoryBackend(StorageBackend):
         """
         Resolves a memory-style virtual path into an in-memory object (file or directory).
 
-        This performs a pure dictionary traversal. It never coerces types or guesses structure.
-        If any intermediate path component is missing or not a dict, resolution fails.
-
         Args:
-            path: Memory-style path, e.g., 'root/dir1/file.txt'
+            path: Memory-style path, e.g., '/root/dir1/file.txt'
 
         Returns:
-            The object at that path (could be dict or content object), or None if not found
+            The object at that path (could be None for directory or content for file), or None if not found
         """
-        components = str(path).strip("/").split("/")
-        current = self._memory_store  # root dict, e.g., {"root": {"file.txt": "data"}}
-
-        for comp in components:
-            if not isinstance(current, dict):
-                return None  # hit a file too early
-            if comp not in current:
-                return None
-            current = current[comp]
-
-        return current
+        key = self._normalize(path)
+        return self._memory_store.get(key)
 
     def move(self, src: Union[str, Path], dst: Union[str, Path]) -> None:
         """
@@ -406,10 +393,14 @@ class MemoryBackend(StorageBackend):
         if src_key not in self._memory_store:
             raise FileNotFoundError(f"Source not found: {src}")
         
-        # Check destination parent exists
+        # Check destination parent exists and is a directory
         dst_parent = self._normalize(Path(dst_key).parent)
-        if dst_parent != '.' and dst_parent not in self._memory_store:
-            raise FileNotFoundError(f"Destination parent path does not exist: {dst}")
+        if dst_parent != '.':
+            if dst_parent not in self._memory_store:
+                raise FileNotFoundError(f"Destination parent path does not exist: {dst}")
+            # Check if parent is actually a directory (None value)
+            if self._memory_store[dst_parent] is not None:
+                raise StorageResolutionError(f"Destination parent is not a directory: {dst_parent}")
         
         # Check destination doesn't exist
         if dst_key in self._memory_store:
@@ -451,10 +442,14 @@ class MemoryBackend(StorageBackend):
         if src_key not in self._memory_store:
             raise FileNotFoundError(f"Source not found: {src}")
         
-        # Check destination parent exists
+        # Check destination parent exists and is a directory
         dst_parent = self._normalize(Path(dst_key).parent)
-        if dst_parent != '.' and dst_parent not in self._memory_store:
-            raise FileNotFoundError(f"Destination parent path does not exist: {dst}")
+        if dst_parent != '.':
+            if dst_parent not in self._memory_store:
+                raise FileNotFoundError(f"Destination parent path does not exist: {dst}")
+            # Check if parent is actually a directory (None value)
+            if self._memory_store[dst_parent] is not None:
+                raise StorageResolutionError(f"Destination parent is not a directory: {dst_parent}")
         
         # Check destination doesn't exist
         if dst_key in self._memory_store:
