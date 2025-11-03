@@ -21,10 +21,9 @@ from .memory import MemoryBackend
 from .disk import DiskBackend
 
 # Optional backends
-try:
-    from .zarr import ZarrBackend
-except ImportError:
-    ZarrBackend = None
+# Zarr is a required backend for this project. Import it directly so
+# missing dependency errors surface loudly during test/setup.
+from .zarr import ZarrBackend
 
 # File manager
 from .filemanager import FileManager
@@ -43,11 +42,17 @@ from .exceptions import (
     UnsupportedFormatError,
 )
 
-# Streaming (optional)
+# Streaming (optional and lazy)
+# Don't import at module level - streaming is heavy and optional
+# Users can import manually if needed: from polystore.streaming import StreamingBackend
 try:
     from .streaming import StreamingBackend
 except ImportError:
     StreamingBackend = None
+# Streaming (optional and lazy)
+# Don't import at module level - streaming is heavy and optional
+# Users can import manually if needed: from polystore.streaming import StreamingBackend
+StreamingBackend = None
 
 __all__ = [
     # Version
@@ -74,7 +79,7 @@ __all__ = [
     "StorageResolutionError",
     "BackendNotFoundError",
     "UnsupportedFormatError",
-    # Streaming
+    # Streaming (optional)
     "StreamingBackend",
 ]
 

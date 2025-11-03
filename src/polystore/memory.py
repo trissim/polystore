@@ -7,6 +7,7 @@ It stores data in memory and supports directory operations.
 """
 
 import logging
+import copy as py_copy
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional, Set, Union
 
